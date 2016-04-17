@@ -5,12 +5,61 @@ var api = require('../config/api');
   console.log(res);
 });*/
 
-getSistrix('http://witt-weiden.de',{
+/*getSistrix('http://google.de',{
   method: 'links.overview', //domain.sichtbarkeitsindex
   mobile: false
 }, function(res) {
   console.log(res);
-});
+});*/
+
+/*getGooglePSI('http://google.de', {mobile: false}, function(res) {
+  console.log(res);
+});*/
+
+function getGooglePSI(url, options, cb) {
+  var qs = {
+    url: url,
+    key: api.googlePsi.key
+  };
+
+  if (options.mobile) {
+    qs.strategy = 'mobile';
+  }
+
+  request({
+    url: 'https://www.googleapis.com/pagespeedonline/v2/runPagespeed/',
+    method: 'GET',
+    qs: qs
+  })
+  .on('response', function(response) {
+    // Add error handling here
+    // console.log(response.statusCode);
+  })
+  .on('data', function(dataRaw) {
+    //console.log(dataRaw);
+    /*var data;
+
+    try {
+      data = JSON.parse(dataRaw);
+    } catch (e) {
+      return console.error(e);
+    }
+
+    console.log(data);*/
+
+    var data = ab2str(dataRaw);
+    data = JSON.parse(JSON.stringify(data));
+    //console.log(data);
+    console.log(data.ruleGroups.SPEED.score);
+    //console.log(JSON.parse(dataRaw));
+    //console.log(data.ruleGroups.SPEED.score);
+
+  });
+}
+
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
 
 function getSistrix(url, options, cb) {
   var qs = {
