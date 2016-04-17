@@ -16,6 +16,32 @@ var api = require('../config/api');
   console.log(res);
 });*/
 
+getGoogleIndex('http://google.de', {mobile: false}, function(res) {
+  console.log(res);
+});
+
+
+
+function getGoogleIndex(url) {
+  request({
+    url: 'https://www.google.de/search?q=site:witt-weiden.de',
+    method: 'GET'
+  })
+  .on('response', function(response) {
+    // Add error handling here
+    // console.log(response.statusCode);
+  })
+  .on('data', function(dataRaw) {
+    var cheerio = require('cheerio'),
+      $ = cheerio.load(dataRaw);
+
+    var data = $('#resultStats').html();
+    data = data.toString();
+    //data = data.replace(/\n|\r/g, "");
+    console.log(data);
+  });
+}
+
 function getGooglePSI(url, options, cb) {
   var qs = {
     url: url,
