@@ -23,23 +23,22 @@ getGoogleIndex('http://google.de', {mobile: false}, function(res) {
 
 
 function getGoogleIndex(url) {
-  request({
-    url: 'https://www.google.de/search?q=site:witt-weiden.de',
-    method: 'GET'
-  })
-  .on('response', function(response) {
-    // Add error handling here
-    // console.log(response.statusCode);
-  })
-  .on('data', function(dataRaw) {
+  var options = {
+    headers: {
+      'User-Agent': 'request'
+    }
+  };
+
+  request('https://www.google.de/search?q=site:google.de', options, function (error, response, html) {
+  if (!error && response.statusCode == 200) {
     var cheerio = require('cheerio'),
-      $ = cheerio.load(dataRaw);
+      $ = cheerio.load(html);
 
     var data = $('#resultStats').html();
-    data = data.toString();
-    //data = data.replace(/\n|\r/g, "");
+
     console.log(data);
-  });
+  }
+});
 }
 
 function getGooglePSI(url, options, cb) {
