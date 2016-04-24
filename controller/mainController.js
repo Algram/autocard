@@ -6,8 +6,22 @@ var api = require('../config/api');
 });*/
 
 /*getSistrix('http://google.de',{
-  method: 'links.overview', //domain.sichtbarkeitsindex
+  method: 'links.overview',
   mobile: false
+}, function(res) {
+  console.log(res);
+});*/
+
+/*getSistrix('http://google.de',{
+  method: 'domain.sichtbarkeitsindex',
+  mobile: false
+}, function(res) {
+  console.log(res);
+});*/
+
+/*getSistrix('http://google.de',{
+  method: 'domain.sichtbarkeitsindex',
+  mobile: true
 }, function(res) {
   console.log(res);
 });*/
@@ -16,9 +30,9 @@ var api = require('../config/api');
   console.log(res);
 });*/
 
-getGoogleIndex('http://google.de', function(res) {
+/*getGoogleIndex('http://google.de', function(res) {
   console.log(res);
-});
+});*/
 
 
 function getGoogleIndex(url, cb) {
@@ -31,58 +45,39 @@ function getGoogleIndex(url, cb) {
   };
 
   request('https://www.google.de/search?q=site:google.de', options, function (error, response, html) {
-  if (!error && response.statusCode == 200) {
-    var cheerio = require('cheerio'),
-      $ = cheerio.load(html, {decodeEntities: false});
+    if (!error && response.statusCode == 200) {
+      var cheerio = require('cheerio'),
+        $ = cheerio.load(html, {decodeEntities: false});
 
-    var data = $('#resultStats').html();
+      var data = $('#resultStats').html();
 
-    var resultsNum = data.replace(/\(.*?\)/, '');
-    resultsNum = resultsNum.replace(/\D/g,'');
+      var resultsNum = data.replace(/\(.*?\)/, '');
+      resultsNum = resultsNum.replace(/\D/g,'');
 
-    cb(resultsNum);
-  }
-});
+      cb(resultsNum);
+    }
+  });
 }
 
-function getGooglePSI(url, options, cb) {
+function getGooglePSI(url, optionsExt, cb) {
   var qs = {
     url: url,
     key: api.googlePsi.key
   };
 
-  if (options.mobile) {
+  if (optionsExt.mobile) {
     qs.strategy = 'mobile';
   }
 
-  request({
-    url: 'https://www.googleapis.com/pagespeedonline/v2/runPagespeed/',
-    method: 'GET',
+  var options = {
     qs: qs
-  })
-  .on('response', function(response) {
-    // Add error handling here
-    // console.log(response.statusCode);
-  })
-  .on('data', function(dataRaw) {
-    //console.log(dataRaw);
-    /*var data;
+  };
 
-    try {
-      data = JSON.parse(dataRaw);
-    } catch (e) {
-      return console.error(e);
+  request('https://www.googleapis.com/pagespeedonline/v2/runPagespeed/', options, function (error, response, dataRaw) {
+    if (!error && response.statusCode == 200) {
+      var data = JSON.parse(dataRaw);
+      console.log(data.ruleGroups.SPEED.score);
     }
-
-    console.log(data);*/
-
-    var data = ab2str(dataRaw);
-    data = JSON.parse(JSON.stringify(data));
-    //console.log(data);
-    console.log(data.ruleGroups.SPEED.score);
-    //console.log(JSON.parse(dataRaw));
-    //console.log(data.ruleGroups.SPEED.score);
-
   });
 }
 
