@@ -1,39 +1,57 @@
 var request = require('request');
+
+// Load all the things necessary for the api
+var google = require('googleapis');
+var gwt = google.webmasters('v3');
 var api = require('../config/api');
 
 /*getGTmetrix('http://google.de', function(res) {
-  console.log(res);
+  console.log('GTmetrix',res);
 });*/
 
 /*getSistrix('http://google.de',{
   method: 'links.overview',
   mobile: false
 }, function(res) {
-  console.log(res);
+  console.log('Sistrix', res);
 });*/
 
 /*getSistrix('http://google.de',{
   method: 'domain.sichtbarkeitsindex',
   mobile: false
 }, function(res) {
-  console.log(res);
+  console.log('Sistrix', res);
 });*/
 
 /*getSistrix('http://google.de',{
   method: 'domain.sichtbarkeitsindex',
   mobile: true
 }, function(res) {
-  console.log(res);
+  console.log('Sistrix', res);
 });*/
 
 /*getGooglePSI('http://google.de', {mobile: false}, function(res) {
-  console.log(res);
+  console.log('Google PSI', res);
 });*/
 
 /*getGoogleIndex('http://google.de', function(res) {
-  console.log(res);
+  console.log('Google Index', res);
 });*/
 
+
+getGWT();
+function getGWT(url, cb) {
+  var key = require('../config/key.json');
+  var authClient = new google.auth.JWT(key.client_email, key.client_id, key.private_key, ['https://www.googleapis.com/auth/webmasters.readonly'], null);
+
+
+  authClient.authorize(function (err, tokens) {
+    if (err) {
+      return console.log(err, tokens);
+    }
+
+  });
+}
 
 function getGoogleIndex(url, cb) {
   var rndNum = Math.floor(Math.random() * api.userAgents.length);
@@ -76,13 +94,9 @@ function getGooglePSI(url, optionsExt, cb) {
   request('https://www.googleapis.com/pagespeedonline/v2/runPagespeed/', options, function (error, response, dataRaw) {
     if (!error && response.statusCode == 200) {
       var data = JSON.parse(dataRaw);
-      console.log(data.ruleGroups.SPEED.score);
+      cb(data.ruleGroups.SPEED.score);
     }
   });
-}
-
-function ab2str(buf) {
-  return String.fromCharCode.apply(null, new Uint16Array(buf));
 }
 
 function getSistrix(url, options, cb) {
