@@ -52,7 +52,67 @@ function getGWT(url, cb) {
 
   });
 }*/
-sendMail();
+
+var urls = ['http://google.com'];
+startCalls();
+function startCalls() {
+  var results = [];
+  for (var i = 0; i < urls.length; i++) {
+    var url = urls[i];
+    console.log(url);
+    var result = {};
+    result.sistrix = [];
+
+    getGTmetrix(url, function(res) {
+      console.log('GTmetrix',res);
+      result.gtmetrix = res;
+    });
+
+    getSistrix(url,{
+      method: 'links.overview',
+      mobile: false
+    }, function(res) {
+      console.log('Sistrix', res);
+      result.sistrix.push({'links.overview': res});
+    });
+
+    getSistrix(url,{
+      method: 'domain.sichtbarkeitsindex',
+      mobile: false
+    }, function(res) {
+      console.log('Sistrix', res);
+      result.sistrix.push({'domain.sichtbarkeitsindex.desktop': res});
+    });
+
+    getSistrix(url,{
+      method: 'domain.sichtbarkeitsindex',
+      mobile: true
+    }, function(res) {
+      console.log('Sistrix', res);
+      result.sistrix.push({'domain.sichtbarkeitsindex.desktop': res});
+    });
+
+    getGooglePSI(url, {mobile: false}, function(res) {
+      console.log('Google PSI', res);
+      result.googlepsi = res;
+    });
+
+    getGoogleIndex(url, function(res) {
+      console.log('Google Index', res);
+      result.googleindex = res;
+    });
+
+    /*while (true) {
+
+      if (results[url].length === 4) {
+        console.log(results[i]);
+      } else {
+        break;
+      }
+    }*/
+  }
+}
+
 function sendMail() {
   var SparkPost = require('sparkpost');
   var SparkPostClient = new SparkPost(api.sparkpost.key);
