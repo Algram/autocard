@@ -60,16 +60,22 @@ function sendMail() {
   var reqObj = {
     transmissionBody: {
       content: {
-        from: 'me@example.com',
+        from: 'me@sparkpostbox.com',
         subject: 'subject',
         text: 'text body'
       },
-      recipients: [ 'aliasgram@gmail.com' ]
+      recipients: [
+        {address: 'aliasgram@gmail.com'}
+      ]
     }
   };
 
   SparkPostClient.transmissions.send(reqObj, function(err, res) {
-    console.log('successfully sent');
+    if (!error) {
+      console.log('successfully sent');
+    } else {
+      console.log(err);
+    }
   });
 }
 
