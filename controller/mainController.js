@@ -39,7 +39,7 @@ var api = require('../config/api');
 });*/
 
 
-getGWT();
+/*getGWT();
 function getGWT(url, cb) {
   var key = require('../config/key.json');
   var authClient = new google.auth.JWT(key.client_email, key.client_id, key.private_key, ['https://www.googleapis.com/auth/webmasters.readonly'], null);
@@ -50,6 +50,26 @@ function getGWT(url, cb) {
       return console.log(err, tokens);
     }
 
+  });
+}*/
+sendMail();
+function sendMail() {
+  var SparkPost = require('sparkpost');
+  var SparkPostClient = new SparkPost(api.sparkpost.key);
+
+  var reqObj = {
+    transmissionBody: {
+      content: {
+        from: 'me@example.com',
+        subject: 'subject',
+        text: 'text body'
+      },
+      recipients: [ 'aliasgram@gmail.com' ]
+    }
+  };
+
+  SparkPostClient.transmissions.send(reqObj, function(err, res) {
+    console.log('successfully sent');
   });
 }
 
