@@ -1,43 +1,10 @@
 var request = require('request');
+var async = require('async');
 
 // Load all the things necessary for the api
 var google = require('googleapis');
 var gwt = google.webmasters('v3');
 var api = require('../config/api');
-
-/*getGTmetrix('http://google.de', function(res) {
-  console.log('GTmetrix',res);
-});*/
-
-/*getSistrix('http://google.de',{
-  method: 'links.overview',
-  mobile: false
-}, function(res) {
-  console.log('Sistrix', res);
-});*/
-
-/*getSistrix('http://google.de',{
-  method: 'domain.sichtbarkeitsindex',
-  mobile: false
-}, function(res) {
-  console.log('Sistrix', res);
-});*/
-
-/*getSistrix('http://google.de',{
-  method: 'domain.sichtbarkeitsindex',
-  mobile: true
-}, function(res) {
-  console.log('Sistrix', res);
-});*/
-
-/*getGooglePSI('http://google.de', {mobile: false}, function(res) {
-  console.log('Google PSI', res);
-});*/
-
-/*getGoogleIndex('http://google.de', function(res) {
-  console.log('Google Index', res);
-});*/
-
 
 /*getGWT();
 function getGWT(url, cb) {
@@ -56,11 +23,31 @@ function getGWT(url, cb) {
 var urls = ['http://google.com'];
 startCalls();
 function startCalls() {
-  var results = [];
-  for (var i = 0; i < urls.length; i++) {
-    var url = urls[i];
-    console.log(url);
-    var result = {};
+
+
+  async.parallel({
+      one: function(callback){
+          setTimeout(function(){
+              callback(null, 1);
+          }, 200);
+      },
+      two: function(callback){
+          setTimeout(function(){
+              callback(null, 2);
+          }, 100);
+      }
+  },
+  function(err, results) {
+      // results is now equals to: {one: 1, two: 2}
+  });
+
+
+  var result = {};
+  async.each(urls, function(url, callback) {
+
+    // Perform operation on file here.
+    console.log('Processing url ' + url);
+
     result.sistrix = [];
 
     getGTmetrix(url, function(res) {
@@ -102,15 +89,26 @@ function startCalls() {
       result.googleindex = res;
     });
 
-    /*while (true) {
 
-      if (results[url].length === 4) {
-        console.log(results[i]);
+    if( file.length > 32 ) {
+      console.log('This file name is too long');
+      callback('File name too long');
+    } else {
+      // Do work to process file here
+      console.log('File processed');
+      callback();
+    }
+  }, function(err){
+      // if any of the file processing produced an error, err would equal that error
+      if( err ) {
+        // One of the iterations produced an error.
+        // All processing will now stop.
+        console.log('A file failed to process');
       } else {
-        break;
+        console.log('All files have been processed successfully');
+        console.log(result);
       }
-    }*/
-  }
+  });
 }
 
 function sendMail() {
