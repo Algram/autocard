@@ -62,6 +62,11 @@ function startCalls() {
         getGooglePSI(url, {mobile: false}, function(res) {
           callback(null, res);
         });
+      },
+      googleindex(callback) {
+        getGoogleIndex(url, function(res) {
+          callback(res);
+        });
       }
     },
     function(err, result) {
@@ -75,19 +80,12 @@ function startCalls() {
 
   }, function(err){
       console.log(results);
+
+      sendMail(results);
   });
-
-
-
-/*
-    getGoogleIndex(url, function(res) {
-      console.log('Google Index', res);
-      result.googleindex = res;
-    });*/
-
 }
 
-function sendMail() {
+function sendMail(data) {
   var SparkPost = require('sparkpost');
   var SparkPostClient = new SparkPost(api.sparkpost.key);
 
@@ -96,7 +94,7 @@ function sendMail() {
       content: {
         from: 'me@sparkpostbox.com',
         subject: 'subject',
-        text: 'text body'
+        text: JSON.stringify(data)
       },
       recipients: [
         {address: 'aliasgram@gmail.com'}
