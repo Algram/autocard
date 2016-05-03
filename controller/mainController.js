@@ -22,93 +22,69 @@ function getGWT(url, cb) {
 
 var urls = ['http://google.com'];
 startCalls();
+
 function startCalls() {
+  var results = [];
 
+  async.each(urls, function(url, callback) {
 
-  async.parallel({
-      one: function(callback){
-          setTimeout(function(){
-              callback(null, 1);
-          }, 200);
+    async.parallel({
+      gtmetrix(callback) {
+        getGTmetrix(url, function(res) {
+          callback(null, res);
+        });
       },
-      two: function(callback){
-          setTimeout(function(){
-              callback(null, 2);
-          }, 100);
+      sistrix_links(callback) {
+        getSistrix(url,{
+          method: 'links.overview',
+          mobile: false
+        }, function(res) {
+          callback(null, res);
+        });
+      },
+      sistrix_visibility_desktop(callback) {
+        getSistrix(url,{
+          method: 'domain.sichtbarkeitsindex',
+          mobile: false
+        }, function(res) {
+          callback(null, res);
+        });
+      },
+      sistrix_visibility_mobile(callback) {
+        getSistrix(url,{
+          method: 'domain.sichtbarkeitsindex',
+          mobile: true
+        }, function(res) {
+          callback(null, res);
+        });
+      },
+      googlepsi(callback) {
+        getGooglePSI(url, {mobile: false}, function(res) {
+          callback(null, res);
+        });
       }
-  },
-  function(err, results) {
-      // results is now equals to: {one: 1, two: 2}
+    },
+    function(err, result) {
+      results.push({
+        url: url,
+        result: result
+      });
+
+      callback();
+    });
+
+  }, function(err){
+      console.log(results);
   });
 
 
-  var result = {};
-  async.each(urls, function(url, callback) {
 
-    // Perform operation on file here.
-    console.log('Processing url ' + url);
-
-    result.sistrix = [];
-
-    getGTmetrix(url, function(res) {
-      console.log('GTmetrix',res);
-      result.gtmetrix = res;
-    });
-
-    getSistrix(url,{
-      method: 'links.overview',
-      mobile: false
-    }, function(res) {
-      console.log('Sistrix', res);
-      result.sistrix.push({'links.overview': res});
-    });
-
-    getSistrix(url,{
-      method: 'domain.sichtbarkeitsindex',
-      mobile: false
-    }, function(res) {
-      console.log('Sistrix', res);
-      result.sistrix.push({'domain.sichtbarkeitsindex.desktop': res});
-    });
-
-    getSistrix(url,{
-      method: 'domain.sichtbarkeitsindex',
-      mobile: true
-    }, function(res) {
-      console.log('Sistrix', res);
-      result.sistrix.push({'domain.sichtbarkeitsindex.desktop': res});
-    });
-
-    getGooglePSI(url, {mobile: false}, function(res) {
-      console.log('Google PSI', res);
-      result.googlepsi = res;
-    });
-
+/*
     getGoogleIndex(url, function(res) {
       console.log('Google Index', res);
       result.googleindex = res;
-    });
+    });*/
 
-
-    if( file.length > 32 ) {
-      console.log('This file name is too long');
-      callback('File name too long');
-    } else {
-      // Do work to process file here
-      console.log('File processed');
-      callback();
-    }
-  }, function(err){
-      // if any of the file processing produced an error, err would equal that error
-      if( err ) {
-        // One of the iterations produced an error.
-        // All processing will now stop.
-        console.log('A file failed to process');
-      } else {
-        console.log('All files have been processed successfully');
-        console.log(result);
-      }
-  });
 }
 
 function sendMail() {
