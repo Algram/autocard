@@ -65,7 +65,7 @@ function startCalls() {
       },
       googleindex(callback) {
         getGoogleIndex(url, function(res) {
-          callback(res);
+          callback(null, res);
         });
       }
     },
@@ -103,7 +103,7 @@ function sendMail(data) {
   };
 
   SparkPostClient.transmissions.send(reqObj, function(err, res) {
-    if (!error) {
+    if (!err) {
       console.log('successfully sent');
     } else {
       console.log(err);
