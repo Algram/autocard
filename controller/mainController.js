@@ -4,24 +4,30 @@ var async = require('async');
 // Load all the things necessary for the api
 var google = require('googleapis');
 var gwt = google.webmasters('v3');
-var api = require('../config/api');
 
-/*getGWT();
+getGWT();
 function getGWT(url, cb) {
-  var key = require('../config/key.json');
-  var authClient = new google.auth.JWT(key.client_email, key.client_id, key.private_key, ['https://www.googleapis.com/auth/webmasters.readonly'], null);
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = '/home/raphaelg/Dokumente/Development/autocard/config/key.json';
 
-
-  authClient.authorize(function (err, tokens) {
+  google.auth.getApplicationDefault(function (err, authClient) {
     if (err) {
-      return console.log(err, tokens);
+      return console.log('Failed to get the default credentials: ' + String(err));
+    }
+    // The createScopedRequired method returns true when running on GAE or a local developer
+    // machine. In that case, the desired scopes must be passed in manually. When the code is
+    // running in GCE or a Managed VM, the scopes are pulled from the GCE metadata server.
+    // See https://cloud.google.com/compute/docs/authentication for more information.
+    if (authClient.createScopedRequired && authClient.createScopedRequired()) {
+      // Scopes can be specified either as an array or as a single, space-delimited string.
+      authClient = authClient.createScoped(['https://www.googleapis.com/auth/webmasters.readonly']);
     }
 
+
   });
-}*/
+}
 
 var urls = ['http://google.com'];
-startCalls();
+//startCalls();
 
 function startCalls() {
   var results = [];
@@ -81,7 +87,7 @@ function startCalls() {
   }, function(err){
       console.log(results);
 
-      sendMail(results);
+      //sendMail(results);
   });
 }
 
