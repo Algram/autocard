@@ -1,50 +1,44 @@
 var request = require('request');
 var async = require('async');
+var api = require('../config/api');
 
 // Load all the things necessary for the api
 var google = require('googleapis');
 var gwt = google.webmasters('v3');
 
-getGWT();
-function getGWT(url, cb) {
-  process.env.GOOGLE_APPLICATION_CREDENTIALS = '/home/raphaelg/Dokumente/Development/autocard/config/key.json';
 
-  google.auth.getApplicationDefault(function (err, authClient) {
-    if (err) {
-      return console.log('Failed to get the default credentials: ' + String(err));
-    }
-    // The createScopedRequired method returns true when running on GAE or a local developer
-    // machine. In that case, the desired scopes must be passed in manually. When the code is
-    // running in GCE or a Managed VM, the scopes are pulled from the GCE metadata server.
-    // See https://cloud.google.com/compute/docs/authentication for more information.
-    if (authClient.createScopedRequired && authClient.createScopedRequired()) {
-      // Scopes can be specified either as an array or as a single, space-delimited string.
-      console.log('abe');
-      authClient = authClient.createScoped(['https://www.googleapis.com/auth/webmasters']);
-    }
+var queries = [
+  {
+    url: "http://google.com",
+    googleQueries: [
+      "",
+      "inurl:cekey",
+      "inurl:showstatic"
+    ]
+  },
+  {
+    url: "http://google.de",
+    googleQueries: [
+      ""
+    ]
+  }
+];
 
-    gwt.urlcrawlerrorscounts.query({ auth: authClient, siteUrl: 'http://www.witt-weiden.de'}, function(err, data) {
-      console.log(err, data);
-    });
-  });
-}
-
-var urls = ['http://google.com'];
-//startCalls();
+startCalls();
 
 function startCalls() {
   var results = [];
 
-  async.each(urls, function(url, callback) {
+  async.eachSeries(queries, function(query, callback) {
 
     async.parallel({
       gtmetrix(callback) {
-        getGTmetrix(url, function(res) {
+        getGTmetrix(query.url, function(res) {
           callback(null, res);
         });
       },
       sistrix_links(callback) {
-        getSistrix(url,{
+        getSistrix(query.url,{
           method: 'links.overview',
           mobile: false
         }, function(res) {
@@ -52,7 +46,7 @@ function startCalls() {
         });
       },
       sistrix_visibility_desktop(callback) {
-        getSistrix(url,{
+        getSistrix(query.url,{
           method: 'domain.sichtbarkeitsindex',
           mobile: false
         }, function(res) {
@@ -60,27 +54,44 @@ function startCalls() {
         });
       },
       sistrix_visibility_mobile(callback) {
-        getSistrix(url,{
+        getSistrix(query.url,{
           method: 'domain.sichtbarkeitsindex',
           mobile: true
         }, function(res) {
           callback(null, res);
         });
       },
-      googlepsi(callback) {
-        getGooglePSI(url, {mobile: false}, function(res) {
+      googlepsi_desktop(callback) {
+        getGooglePSI(query.url, {mobile: false}, function(res) {
+          callback(null, res);
+        });
+      },
+      googlepsi_mobile(callback) {
+        getGooglePSI(query.url, {mobile: true}, function(res) {
           callback(null, res);
         });
       },
       googleindex(callback) {
-        getGoogleIndex(url, function(res) {
-          callback(null, res);
+        var interval = 1 * 20000; // 1 second;
+        async.forEachOf(query.googleQueries, function(searchParam, i, callback) {
+
+
+          setTimeout( function (i) {
+
+            getGoogleIndex(query.url, searchParam, function(res) {
+              console.log('res',res);
+              callback(null, res);
+            });
+          }, interval * i, i);
+
+        }, function(err, res){
+            callback(null, res);
         });
       }
     },
     function(err, result) {
       results.push({
-        url: url,
+        url: query.url,
         result: result
       });
 
@@ -94,54 +105,70 @@ function startCalls() {
   });
 }
 
-function sendMail(data) {
-  var SparkPost = require('sparkpost');
-  var SparkPostClient = new SparkPost(api.sparkpost.key);
+var results = [];
+async.eachSeries(queries, function(query, cb) {
 
-  var reqObj = {
-    transmissionBody: {
-      content: {
-        from: 'me@sparkpostbox.com',
-        subject: 'subject',
-        text: JSON.stringify(data)
-      },
-      recipients: [
-        {address: 'aliasgram@gmail.com'}
-      ]
-    }
-  };
-
-  SparkPostClient.transmissions.send(reqObj, function(err, res) {
-    if (!err) {
-      console.log('successfully sent');
+  async.eachSeries(query.googleQueries, function(searchParam, cb) {
+    getGoogleIndex(query.url, searchParam, function(res) {
+      results.push(res);
+      cb();
+    });
+  }, function(err) {
+    if(err) {
+      console.log('FAIL');
     } else {
-      console.log(err);
+      console.log('PART RES', results);
+      cb();
     }
   });
-}
 
-function getGoogleIndex(url, cb) {
-  var rndNum = Math.floor(Math.random() * api.userAgents.length);
+}, function(err) {
+  if(err) {
+    console.log('FAIL');
+  } else {
+    console.log('END RES', results);
+  }
+});
+
+
+function getGoogleIndex(url, searchParam, cb) {
+  var rndUserAgent = api.userAgents[Math.floor(Math.random() * api.userAgents.length)];
+  var rndDelay = Math.random() * (20000 - 10000) + 10000;
+  //var rndDelay = Math.random() * (170 - 90) + 90;
 
   var options = {
     headers: {
-      'User-Agent': api.userAgents[rndNum]
+      'User-Agent': rndUserAgent
     }
   };
 
-  request('https://www.google.de/search?q=site:google.de', options, function (error, response, html) {
-    if (!error && response.statusCode == 200) {
-      var cheerio = require('cheerio'),
-        $ = cheerio.load(html, {decodeEntities: false});
+  if (searchParam !== "") {
+    searchParam = '+' + searchParam;
+  }
 
-      var data = $('#resultStats').html();
+  console.log('https://www.google.de/search?q=site:' + url + searchParam);
+  console.log('Waiting on cooldown..');
+  setTimeout(function() {
+    console.log('Catching..');
 
-      var resultsNum = data.replace(/\(.*?\)/, '');
-      resultsNum = resultsNum.replace(/\D/g,'');
+    request('https://www.google.de/search?q=site:' + url + '+' + searchParam, options, function (error, response, html) {
+      if (!error && response.statusCode == 200) {
+        var cheerio = require('cheerio'),
+          $ = cheerio.load(html, {decodeEntities: false});
 
-      cb(resultsNum);
-    }
-  });
+        var data = $('#resultStats').html();
+
+        if (data !== null) {
+          var resultsNum = data.replace(/\(.*?\)/, '');
+          resultsNum = resultsNum.replace(/\D/g,'');
+          cb(resultsNum);
+        } else {
+          cb(0);
+        }
+      }
+    });
+
+  }, rndDelay);
 }
 
 function getGooglePSI(url, optionsExt, cb) {
@@ -183,7 +210,7 @@ function getSistrix(url, options, cb) {
     qs: qs
   })
   .on('response', function(response) {
-    // Add error handling here
+    // TODO Add error handling here
     // console.log(response.statusCode);
   })
   .on('data', function(dataRaw) {
@@ -250,3 +277,56 @@ function getGTmetrix(url, cb) {
     }
   });
 }
+
+
+function sendMail(data) {
+  var SparkPost = require('sparkpost');
+  var SparkPostClient = new SparkPost(api.sparkpost.key);
+
+  var reqObj = {
+    transmissionBody: {
+      content: {
+        from: 'me@sparkpostbox.com',
+        subject: 'subject',
+        text: JSON.stringify(data)
+      },
+      recipients: [
+        {address: 'aliasgram@gmail.com'}
+      ]
+    }
+  };
+
+  SparkPostClient.transmissions.send(reqObj, function(err, res) {
+    if (!err) {
+      console.log('successfully sent');
+    } else {
+      console.log(err);
+    }
+  });
+}
+
+
+/*getGWT();
+function getGWT(url, cb) {
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = '/home/raphaelg/Dokumente/Development/autocard/config/key.json';
+
+  google.auth.getApplicationDefault(function (err, authClient) {
+    if (err) {
+      return console.log('Failed to get the default credentials: ' + String(err));
+    }
+    // The createScopedRequired method returns true when running on GAE or a local developer
+    // machine. In that case, the desired scopes must be passed in manually. When the code is
+    // running in GCE or a Managed VM, the scopes are pulled from the GCE metadata server.
+    // See https://cloud.google.com/compute/docs/authentication for more information.
+    if (authClient.createScopedRequired && authClient.createScopedRequired()) {
+      // Scopes can be specified either as an array or as a single, space-delimited string.
+      console.log('abe');
+      authClient = authClient.createScoped(['https://www.googleapis.com/auth/webmasters']);
+    }
+
+    gwt.urlcrawlerrorscounts.query({ auth: authClient, siteUrl: ''}, function(err, data) {
+      console.log(err, data);
+    });
+  });
+}
+*/
