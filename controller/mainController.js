@@ -29,9 +29,9 @@ startCalls();
 function startCalls() {
   var results = [];
 
-  async.eachSeries(queries, function(query, callback) {
+  async.eachSeries(queries, function(query, cb) {
 
-    async.parallel({
+    /*async.parallel({
       gtmetrix(callback) {
         getGTmetrix(query.url, function(res) {
           callback(null, res);
@@ -71,42 +71,73 @@ function startCalls() {
           callback(null, res);
         });
       },
-      googleindex(callback) {
-        var interval = 1 * 20000; // 1 second;
-        async.forEachOf(query.googleQueries, function(searchParam, i, callback) {
-
-
-          setTimeout( function (i) {
-
-            getGoogleIndex(query.url, searchParam, function(res) {
-              console.log('res',res);
-              callback(null, res);
-            });
-          }, interval * i, i);
-
-        }, function(err, res){
-            callback(null, res);
-        });
-      }
-    },
-    function(err, result) {
+    }, function(err, result) {
       results.push({
         url: query.url,
         result: result
       });
 
-      callback();
+      cb();
+    });*/
+
+    async.parallel([
+        function(callback) {
+          getGTmetrix(query.url, function(res) {
+            callback(null, {
+              'gtmetrix': res
+            });
+          });
+        },
+        function(callback) {
+          var data = [];
+
+          async.parallel([
+
+          ], function(err) {
+
+          });
+
+          getSistrix(query.url,{
+            method: 'links.overview',
+            mobile: false
+          }, function(res) {
+            callback(null, {
+              'sistrix': res
+            });
+          });
+        },
+        function(callback) {
+          var data = [];
+          async.eachSeries(query.googleQueries, function(searchParam, cb) {
+            getGoogleIndex(query.url, searchParam, function(res) {
+              console.log(res);
+              data.push(res);
+              cb();
+            });
+          }, function(err) {
+            if(err) {
+              console.log('FAIL');
+            } else {
+              callback(null, data);
+            }
+          });
+        }
+    ], function(err, results){
+       console.log(results);
+       cb();
     });
 
-  }, function(err){
-      console.log(results);
 
-      //sendMail(results);
+  }, function(err){
+    if(err) {
+      console.log('FAIL');
+    } else {
+      console.log('END RES', results);
+    }
   });
 }
 
-var results = [];
-async.eachSeries(queries, function(query, cb) {
+/*async.eachSeries(queries, function(query, cb) {
 
   async.eachSeries(query.googleQueries, function(searchParam, cb) {
     getGoogleIndex(query.url, searchParam, function(res) {
@@ -128,7 +159,18 @@ async.eachSeries(queries, function(query, cb) {
   } else {
     console.log('END RES', results);
   }
-});
+});*/
+
+
+/*async.map(['file1','file2','file3'], function(item, cb) {
+  console.log(item);
+  cb(null, 'beep' + item);
+
+},function(err, results){
+  // results is now an array of stats for each file
+  console.log(err);
+  console.log(results);
+});*/
 
 
 function getGoogleIndex(url, searchParam, cb) {
@@ -165,6 +207,8 @@ function getGoogleIndex(url, searchParam, cb) {
         } else {
           cb(0);
         }
+      } else {
+        cb(null);
       }
     });
 
