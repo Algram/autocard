@@ -1,11 +1,11 @@
 var request = require('request');
 var async = require('async');
 var api = require('../config/api');
+var fs = require('fs');
 
 // Load all the things necessary for the api
 var google = require('googleapis');
 var gwt = google.webmasters('v3');
-
 
 var queries = [
   {
@@ -30,56 +30,6 @@ function startCalls() {
   var results = [];
 
   async.eachSeries(queries, function(query, cb) {
-
-    /*async.parallel({
-      gtmetrix(callback) {
-        getGTmetrix(query.url, function(res) {
-          callback(null, res);
-        });
-      },
-      sistrix_links(callback) {
-        getSistrix(query.url,{
-          method: 'links.overview',
-          mobile: false
-        }, function(res) {
-          callback(null, res);
-        });
-      },
-      sistrix_visibility_desktop(callback) {
-        getSistrix(query.url,{
-          method: 'domain.sichtbarkeitsindex',
-          mobile: false
-        }, function(res) {
-          callback(null, res);
-        });
-      },
-      sistrix_visibility_mobile(callback) {
-        getSistrix(query.url,{
-          method: 'domain.sichtbarkeitsindex',
-          mobile: true
-        }, function(res) {
-          callback(null, res);
-        });
-      },
-      googlepsi_desktop(callback) {
-        getGooglePSI(query.url, {mobile: false}, function(res) {
-          callback(null, res);
-        });
-      },
-      googlepsi_mobile(callback) {
-        getGooglePSI(query.url, {mobile: true}, function(res) {
-          callback(null, res);
-        });
-      },
-    }, function(err, result) {
-      results.push({
-        url: query.url,
-        result: result
-      });
-
-      cb();
-    });*/
-
     async.parallel([
         function(callback) {
           getGTmetrix(query.url, function(res) {
@@ -89,20 +39,62 @@ function startCalls() {
           });
         },
         function(callback) {
-          var data = [];
-
           async.parallel([
-
-          ], function(err) {
-
-          });
-
-          getSistrix(query.url,{
-            method: 'links.overview',
-            mobile: false
-          }, function(res) {
+            function(callback) {
+              getGooglePSI(query.url, {mobile: false}, function(res) {
+                callback(null, {
+                  'desktop': res
+                });
+              });
+            },
+            function(callback) {
+              getGooglePSI(query.url, {mobile: true}, function(res) {
+                callback(null, {
+                  'mobile':res
+                });
+              });
+            }
+          ], function(err, results) {
             callback(null, {
-              'sistrix': res
+              'googlepsi': results
+            });
+          });
+        },
+        function(callback) {
+          async.parallel([
+            function(callback) {
+              getSistrix(query.url,{
+                method: 'links.overview',
+                mobile: false
+              }, function(res) {
+                callback(null, {
+                  'links.overview': res
+                });
+              });
+            },
+            function(callback) {
+              getSistrix(query.url,{
+                method: 'domain.sichtbarkeitsindex',
+                mobile: false
+              }, function(res) {
+                callback(null, {
+                  'domain.sichtbarkeitsindex.desktop': res
+                });
+              });
+            },
+            function(callback) {
+              getSistrix(query.url,{
+                method: 'domain.sichtbarkeitsindex',
+                mobile: true
+              }, function(res) {
+                callback(null, {
+                  'domain.sichtbarkeitsindex.mobile': res
+                });
+              });
+            }
+          ], function(err, results) {
+            callback(null, {
+              'sistrix': results
             });
           });
         },
@@ -110,7 +102,6 @@ function startCalls() {
           var data = [];
           async.eachSeries(query.googleQueries, function(searchParam, cb) {
             getGoogleIndex(query.url, searchParam, function(res) {
-              console.log(res);
               data.push(res);
               cb();
             });
@@ -122,8 +113,8 @@ function startCalls() {
             }
           });
         }
-    ], function(err, results){
-       console.log(results);
+    ], function(err, res){
+      results.push(res);
        cb();
     });
 
@@ -133,45 +124,10 @@ function startCalls() {
       console.log('FAIL');
     } else {
       console.log('END RES', results);
+      fs.writeFile('./data.json', JSON.stringify(results, null, 2) , 'utf-8');
     }
   });
 }
-
-/*async.eachSeries(queries, function(query, cb) {
-
-  async.eachSeries(query.googleQueries, function(searchParam, cb) {
-    getGoogleIndex(query.url, searchParam, function(res) {
-      results.push(res);
-      cb();
-    });
-  }, function(err) {
-    if(err) {
-      console.log('FAIL');
-    } else {
-      console.log('PART RES', results);
-      cb();
-    }
-  });
-
-}, function(err) {
-  if(err) {
-    console.log('FAIL');
-  } else {
-    console.log('END RES', results);
-  }
-});*/
-
-
-/*async.map(['file1','file2','file3'], function(item, cb) {
-  console.log(item);
-  cb(null, 'beep' + item);
-
-},function(err, results){
-  // results is now an array of stats for each file
-  console.log(err);
-  console.log(results);
-});*/
-
 
 function getGoogleIndex(url, searchParam, cb) {
   var rndUserAgent = api.userAgents[Math.floor(Math.random() * api.userAgents.length)];
@@ -322,7 +278,6 @@ function getGTmetrix(url, cb) {
   });
 }
 
-
 function sendMail(data) {
   var SparkPost = require('sparkpost');
   var SparkPostClient = new SparkPost(api.sparkpost.key);
@@ -348,7 +303,6 @@ function sendMail(data) {
     }
   });
 }
-
 
 /*getGWT();
 function getGWT(url, cb) {
