@@ -5,7 +5,7 @@ class Dashboard extends React.Component {
   }
   render() {
     return (
-      <div className="asd">
+      <div className="col-md-3">
         <button onClick={this.handleLoadMoreClick}>Load more</button>
       </div>
     );
