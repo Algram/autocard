@@ -4,7 +4,7 @@ var Schema = mongoose.Schema;
 // Create the crawl schema
 var crawlSchema = new Schema({
   url: String,
-  pagespeed: [{ type: String, score: Number }],
+  pagespeed: Object,
   queries: Array
 });
 
