@@ -2,6 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import DashboardHeader from './_components/DashboardHeader';
+import DashboardHeader from './_components/DashboardForm';
+import DashboardHeader from './_components/DashboardTable';
+import DashboardHeader from './_components/DashboardTile';
 
 class Dashboard extends React.Component {
   constructor(props) {
