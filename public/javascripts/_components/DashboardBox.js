@@ -12,7 +12,7 @@ class Dashboard extends React.Component {
   }
 }
 
-ReactDOM.render(
+/*ReactDOM.render(
   <Dashboard />,
   document.getElementById('content')
-);
+);*/

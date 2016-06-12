@@ -1,9 +1,59 @@
 extends layout
 
 block content
-  script(type='text/babel', src='javascripts/_components/DashboardBox.js')
-  
-  #content
+    script(type='text/babel', src='javascripts/_components/DashboardBox.js')
 
-  h1= title
-  p Welcome to #{title}
+    #content
+
+
+    #dashboard
+      .row
+        .dashboardHeader
+            h1= title
+            p Welcome to #{title}
+      .row
+        .dashboardForm
+          form.form-inline
+            .form-group
+              label.sr-only(for='exampleInputEmail3') Email address         
+              input#exampleInputEmail3.form-control(type='email', placeholder='Email')      
+            .form-group
+              label.sr-only(for='exampleInputPassword3') Password         
+              input#exampleInputPassword3.form-control(type='password', placeholder='Password')      
+            .checkbox
+              label Remember me 
+                input(type='checkbox')   
+            button.btn.btn-default(type='submit') Sign in
+      .row
+        .dashboardTable
+            table.table
+                thead
+                  tr
+                    th #
+                    th First Name
+                    th Last Name
+                    th Username
+                tbody
+                  tr
+                    th(scope='row') 1
+                    td Mark
+                    td Otto
+                    td @mdo
+                  tr
+                    th(scope='row') 2
+                    td Jacob
+                    td Thornton
+                    td @fat
+                  tr
+                    th(scope='row') 3
+                    td Larry
+                    td the Bird
+                    td @twitter
+        .dashboardTile
+          .pagespeed
+            p Google PSI (mobile)
+            span 78
+        .dashboardTile
+          .pagespeed
+            p Google PSI (mobile)
+            span 78
