@@ -5,10 +5,19 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+// imports for database communication
+var mongoose = require('mongoose');
+var database = require('./config/database.json');
+
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
+
+// connect to mongodb
+mongoose.connect(database.url, () => {
+  console.log('Connected to database');
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

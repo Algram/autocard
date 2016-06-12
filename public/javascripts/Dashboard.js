@@ -11,6 +11,8 @@ class Dashboard extends React.Component {
     super(props);
     // Operations usually carried out in componentWillMount go here
   }
+  componentDidMount() {
+  }
   render() {
     return (
       <DashboardHeader />
