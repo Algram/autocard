@@ -1,4 +1,4 @@
 # Autocard
-SEO-Monitoring Tool for various APIs and Google Indexes
+SEO-Monitoring Tool for Google indexes with query support
 
-Just add the API-keys in the config.js and start the tool with `npm install && npm start`.
+Start the tool with `npm install && npm start`.
