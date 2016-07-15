@@ -3,10 +3,6 @@ var async = require('async');
 var api = require('../config/api');
 var fs = require('fs');
 
-// Load all the things necessary for the api
-var google = require('googleapis');
-var gwt = google.webmasters('v3');
-
 var queries = [{
   url: "http://google.com",
   queries: [
@@ -44,14 +40,13 @@ function startCalls() {
   }, function(err) {
     console.log('END RES', results);
     fs.writeFile('./data.json', JSON.stringify(results, null, 2), 'utf-8');
-    sendMail('barasdasdss');
   });
 }
 
 function getGoogleIndex(url, searchParam, cb) {
   var rndUserAgent = api.userAgents[Math.floor(Math.random() * api.userAgents.length)];
-  //var rndDelay = Math.random() * (20000 - 10000) + 10000;
-  var rndDelay = Math.random() * (170 - 90) + 90;
+  var rndDelay = Math.random() * (20000 - 10000) + 10000;
+  //var rndDelay = Math.random() * (170 - 90) + 90;
 
   var options = {
     headers: {
