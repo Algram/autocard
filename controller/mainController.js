@@ -9,14 +9,14 @@ var gwt = google.webmasters('v3');
 
 var queries = [{
   url: "http://google.com",
-  googleQueries: [
+  queries: [
     "",
     "inurl:cekey",
     "inurl:showstatic"
   ]
 }, {
   url: "http://google.de",
-  googleQueries: [
+  queries: [
     ""
   ]
 }];
@@ -27,25 +27,24 @@ function startCalls() {
   var results = [];
 
   async.eachSeries(queries, function(query, cb) {
-    async.eachSeries(query.googleQueries, function(searchParam, cb) {
+    var data = {
+      url: query.url,
+      queries: {}
+    }
+
+    async.eachSeries(query.queries, function(searchParam, cb) {
       getGoogleIndex(query.url, searchParam, function(res) {
-        results.push(res);
+        data.queries[searchParam] = res;
         cb();
       });
-    }, function(err) {
-      if (err) {
-        console.log('FAIL');
-      } else {
-        cb();
-      }
+    }, function() {
+      results.push(data);
+      cb();
     });
   }, function(err) {
-    if (err) {
-      console.log('FAIL');
-    } else {
-      console.log('END RES', results);
-      fs.writeFile('./data.json', JSON.stringify(results, null, 2), 'utf-8');
-    }
+    console.log('END RES', results);
+    fs.writeFile('./data.json', JSON.stringify(results, null, 2), 'utf-8');
+    sendMail('barasdasdss');
   });
 }
 

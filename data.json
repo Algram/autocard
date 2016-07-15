@@ -1,6 +1,16 @@
 [
-  "3820000000",
-  "3",
-  "",
-  "7830000"
+  {
+    "url": "http://google.com",
+    "queries": {
+      "": "3820000000",
+      "inurl:cekey": null,
+      "inurl:showstatic": null
+    }
+  },
+  {
+    "url": "http://google.de",
+    "queries": {
+      "": "7830000"
+    }
+  }
 ]
